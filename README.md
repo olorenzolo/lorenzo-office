@@ -116,3 +116,21 @@ uma barra, o horário do reset e quanto falta. Clicar abre o monitor completo.
 O percentual não é a cota da Anthropic: esse número não fica salvo em lugar nenhum
 na máquina, o Claude Code busca da API em tempo real. O que está aqui é medido dos
 turnos reais das suas mesas.
+
+## Controle de versão
+
+Inspirado no [obsidian-git](https://github.com/Vinzent03/obsidian-git), escopado à pasta
+de trabalho de cada mesa — mesas em repositórios diferentes mostram repositórios diferentes.
+
+Na barra superior aparece uma pílula `⎇ branch` com o número de arquivos alterados e as
+setas de ahead/behind. Clicando, abre o painel:
+
+- **Mudanças** — preparado e alterado em listas separadas, com `+`/`−` por arquivo,
+  preparar tudo e descartar tudo
+- **Diff** — colorido, ao lado da lista; arquivos novos aparecem como adição inteira
+- **Histórico** — commits com hash clicável que abre direto no GitHub
+- **Pull · Push · Sync** — o Sync faz commit do que houver, depois pull com rebase e push
+
+O push cria o upstream sozinho quando o branch ainda não tem um. Nenhum comando passa
+pelo shell: os argumentos vão como array, então nome de arquivo com espaço ou aspas não
+quebra nada.
