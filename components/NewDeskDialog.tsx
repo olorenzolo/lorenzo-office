@@ -71,7 +71,7 @@ export default function NewDeskDialog({ onClose, onCreate, defaultCwd }: Props) 
             <input
               className="input"
               autoFocus
-              placeholder="Ex: Campanhas AndroClinic"
+              placeholder="Ex: Campanhas do cliente"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />

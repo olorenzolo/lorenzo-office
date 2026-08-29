@@ -404,7 +404,7 @@ export default function Office() {
 
       {dialogOpen && (
         <NewDeskDialog
-          defaultCwd={active?.cwd ?? "/Users/lorenzopimentel"}
+          defaultCwd={active?.cwd ?? "~"}
           onClose={() => setDialogOpen(false)}
           onCreate={async (body) => {
             setDialogOpen(false);
