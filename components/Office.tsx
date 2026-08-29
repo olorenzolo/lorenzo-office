@@ -19,6 +19,7 @@ import { AttachmentTray, type Upload } from "./Attachments";
 import UsageMonitor from "./UsageMonitor";
 import GitPanel from "./GitPanel";
 import GitPill from "./GitPill";
+import { useVoice, VoiceSettings } from "./Voice";
 import LeftPanel from "./LeftPanel";
 
 const PERMISSION_LABEL: Record<PermissionMode, string> = {
@@ -35,6 +36,8 @@ export default function Office() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
   const [gitOpen, setGitOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const voice = useVoice();
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploads, setUploads] = useState<Upload[]>([]);
@@ -48,6 +51,8 @@ export default function Office() {
   const composingSince = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
+  /** Last reply already read aloud, so auto-speak never repeats itself. */
+  const spokenRef = useRef<string | null>(null);
 
   const active = desks.find((d) => d.id === activeId) ?? null;
 
@@ -74,6 +79,8 @@ export default function Office() {
     setAttachments([]);
     setUploads([]);
     setUploadError(null);
+    voice.stop();
+    spokenRef.current = null;
 
     loadDesk(activeId).then(({ events }) => {
       if (cancelled) return;
@@ -98,6 +105,23 @@ export default function Office() {
       source.close();
     };
   }, [activeId, refreshDesks]);
+
+  // With auto-speak on, the desk reads its answer aloud the moment the turn
+  // ends — not while streaming, so it never speaks a half-formed sentence.
+  useEffect(() => {
+    if (!voice.auto || !voice.state?.configured) return;
+    if (active?.status !== "idle") return;
+
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item.kind === "result") continue;
+      if (item.kind !== "text" || item.agent) return;
+      if (spokenRef.current === item.key) return;
+      spokenRef.current = item.key;
+      void voice.speak(item.key, item.text);
+      return;
+    }
+  }, [items, active?.status, voice]);
 
   // Keep sidebar status dots fresh even for desks that aren't open.
   useEffect(() => {
@@ -269,6 +293,23 @@ export default function Office() {
 
               <GitPill deskId={active.id} onOpen={() => setGitOpen(true)} />
 
+              <button
+                className={`pill voice-pill${voice.auto ? " on" : ""}`}
+                onClick={() => setVoiceOpen(true)}
+                onContextMenu={(e) => {
+                  // Right-click flips auto-speak without opening the dialog.
+                  e.preventDefault();
+                  voice.toggleAuto(!voice.auto);
+                }}
+                title={
+                  voice.state?.configured
+                    ? `Voz · ${voice.auto ? "falando sozinho" : "sob demanda"} — clique direito alterna`
+                    : "Conectar a ElevenLabs"
+                }
+              >
+                {voice.state?.configured ? (voice.auto ? "🔊" : "🔈") : "🔇"}
+              </button>
+
               {active.billed && active.totalCostUsd > 0 && (
                 <span className="pill">${active.totalCostUsd.toFixed(3)}</span>
               )}
@@ -316,7 +357,14 @@ export default function Office() {
               </button>
             </div>
 
-            <Timeline items={items} billed={active.billed} onPermission={onPermission} />
+            <Timeline
+              items={items}
+              billed={active.billed}
+              voiceOn={voice.state?.configured === true}
+              speakingId={voice.speakingId}
+              onSpeak={voice.speak}
+              onPermission={onPermission}
+            />
 
             <div className="composer">
               <div className="composer-inner">
@@ -395,6 +443,8 @@ export default function Office() {
           </div>
         )}
       </main>
+
+      {voiceOpen && <VoiceSettings onClose={() => setVoiceOpen(false)} />}
 
       {gitOpen && active && (
         <GitPanel deskId={active.id} deskName={active.name} onClose={() => setGitOpen(false)} />

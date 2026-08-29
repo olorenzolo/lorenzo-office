@@ -44,6 +44,25 @@ não há cobrança por turno, então ele é omitido.
 
 Os dados vêm de `~/.lorenzo-office/usage.jsonl`, uma linha por turno.
 
+## Voz (ElevenLabs)
+
+O botão de alto-falante na barra superior abre as configurações. Sem chave, ele explica
+como conectar; com chave, lista as vozes da sua conta, deixa ouvir amostra e ajustar
+estabilidade, fidelidade de timbre e velocidade.
+
+Cada resposta ganha um botão para ouvir. **Clique direito no botão da barra** alterna a
+fala automática: com ela ligada, a mesa lê a resposta em voz alta assim que o turno
+termina — nunca durante o streaming, para não falar frase pela metade.
+
+A chave fica em `~/.lorenzo-office/config.json`, com permissão 600, **fora do
+repositório**. Ela nunca é enviada ao navegador: a página recebe só o mp3 pronto. Os
+áudios ficam em cache por texto + configuração de voz, então reouvir a mesma resposta
+não gasta créditos de novo.
+
+```json
+{ "elevenlabs": { "apiKey": "cole-aqui", "voiceId": "...", "speed": 1.0 } }
+```
+
 ## Permissões
 
 Por mesa, no topo: perguntar · aceitar edições · autonomia total · só planejar.

@@ -5,14 +5,18 @@ import type { Item } from "@/lib/timeline";
 import ToolCard, { toolSummary } from "./ToolCard";
 import Markdown from "./Markdown";
 import { AttachmentList } from "./Attachments";
+import { SpeakButton } from "./Voice";
 
 interface Props {
   items: Item[];
   billed: boolean;
+  voiceOn: boolean;
+  speakingId: string | null;
+  onSpeak: (id: string, text: string) => void;
   onPermission: (requestId: string, decision: "allow" | "always" | "deny") => void;
 }
 
-export default function Timeline({ items, billed, onPermission }: Props) {
+export default function Timeline({ items, billed, voiceOn, speakingId, onSpeak, onPermission }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
@@ -36,7 +40,15 @@ export default function Timeline({ items, billed, onPermission }: Props) {
     <div className="timeline" ref={boxRef}>
       <div className="stream">
         {items.map((item) => (
-          <Block key={item.key} item={item} billed={billed} onPermission={onPermission} />
+          <Block
+            key={item.key}
+            item={item}
+            billed={billed}
+            voiceOn={voiceOn}
+            speakingId={speakingId}
+            onSpeak={onSpeak}
+            onPermission={onPermission}
+          />
         ))}
         <div ref={endRef} />
       </div>
@@ -47,10 +59,16 @@ export default function Timeline({ items, billed, onPermission }: Props) {
 function Block({
   item,
   billed,
+  voiceOn,
+  speakingId,
+  onSpeak,
   onPermission,
 }: {
   item: Item;
   billed: boolean;
+  voiceOn: boolean;
+  speakingId: string | null;
+  onSpeak: Props["onSpeak"];
   onPermission: Props["onPermission"];
 }) {
   switch (item.kind) {
@@ -70,6 +88,14 @@ function Block({
           {item.agent && <div className="agent-tag">subagent</div>}
           <div className="msg-assistant">
             <Markdown text={item.text} />
+            {voiceOn && item.text.trim().length > 12 && (
+              <SpeakButton
+                id={item.key}
+                text={item.text}
+                speaking={speakingId === item.key}
+                onSpeak={onSpeak}
+              />
+            )}
           </div>
         </div>
       );
